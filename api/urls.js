@@ -1,17 +1,5 @@
-const { MongoClient } = require('mongodb');
-
-let cachedClient = null;
-
-async function connectToDatabase() {
-  if (cachedClient) {
-    return cachedClient;
-  }
-
-  const client = new MongoClient(process.env.MONGODB_URI || 'mongodb+srv://username:password@cluster.mongodb.net/url-shortener');
-  await client.connect();
-  cachedClient = client;
-  return client;
-}
+// Mock database - in-memory storage (for demo purposes)
+let mockDatabase = [];
 
 module.exports = async function handler(req, res) {
   // Enable CORS
@@ -28,13 +16,9 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Connect to database
-    const client = await connectToDatabase();
-    const db = client.db('url-shortener');
-    const collection = db.collection('urls');
-
-    // Get all URLs
-    const urls = await collection.find({}).sort({ createdAt: -1 }).toArray();
+    // Get all URLs from mock database, sorted by creation date
+    const urls = mockDatabase
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
     res.json(urls);
   } catch (error) {

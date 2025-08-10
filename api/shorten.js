@@ -1,18 +1,7 @@
-const { MongoClient } = require('mongodb');
 const { nanoid } = require('nanoid');
 
-let cachedClient = null;
-
-async function connectToDatabase() {
-  if (cachedClient) {
-    return cachedClient;
-  }
-
-  const client = new MongoClient(process.env.MONGODB_URI || 'mongodb+srv://username:password@cluster.mongodb.net/url-shortener');
-  await client.connect();
-  cachedClient = client;
-  return client;
-}
+// Mock database - in-memory storage (for demo purposes)
+let mockDatabase = [];
 
 module.exports = async function handler(req, res) {
   // Enable CORS
@@ -36,13 +25,8 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    // Connect to database
-    const client = await connectToDatabase();
-    const db = client.db('url-shortener');
-    const collection = db.collection('urls');
-
-    // Check if URL already exists
-    let url = await collection.findOne({ originalUrl });
+    // Check if URL already exists in mock database
+    let url = mockDatabase.find(item => item.originalUrl === originalUrl);
     
     if (url) {
       return res.json({
@@ -64,7 +48,8 @@ module.exports = async function handler(req, res) {
       createdAt: new Date()
     };
 
-    await collection.insertOne(url);
+    // Store in mock database
+    mockDatabase.push(url);
 
     res.json({
       originalUrl: url.originalUrl,

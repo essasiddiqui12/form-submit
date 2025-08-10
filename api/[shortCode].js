@@ -1,17 +1,5 @@
-const { MongoClient } = require('mongodb');
-
-let cachedClient = null;
-
-async function connectToDatabase() {
-  if (cachedClient) {
-    return cachedClient;
-  }
-
-  const client = new MongoClient(process.env.MONGODB_URI || 'mongodb+srv://username:password@cluster.mongodb.net/url-shortener');
-  await client.connect();
-  cachedClient = client;
-  return client;
-}
+// Mock database - in-memory storage (for demo purposes)
+let mockDatabase = [];
 
 module.exports = async function handler(req, res) {
   // Enable CORS
@@ -30,23 +18,15 @@ module.exports = async function handler(req, res) {
   try {
     const { shortCode } = req.query;
     
-    // Connect to database
-    const client = await connectToDatabase();
-    const db = client.db('url-shortener');
-    const collection = db.collection('urls');
-
-    // Find URL by short code
-    const url = await collection.findOne({ shortCode });
+    // Find URL in mock database
+    const url = mockDatabase.find(item => item.shortCode === shortCode);
     
     if (!url) {
       return res.status(404).json({ error: 'URL not found' });
     }
 
     // Increment click count
-    await collection.updateOne(
-      { shortCode },
-      { $inc: { clicks: 1 } }
-    );
+    url.clicks += 1;
 
     // Redirect to original URL
     res.redirect(301, url.originalUrl);
